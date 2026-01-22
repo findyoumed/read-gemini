@@ -117,27 +117,30 @@ if prompt := st.chat_input("Ask something about the file..."):
         "contents": contents,
         "generationConfig": {
             "temperature": 0.7,
-            "maxOutputTokens": 2048,
+            "maxOutputTokens": 8192,
         }
     }
 
-    try:
-        response = requests.post(API_URL, headers={"Content-Type": "application/json"}, data=json.dumps(payload))
-        
-        if response.status_code == 200:
-            result = response.json()
-            # Extract text from response
-            try:
-                response_text = result["candidates"][0]["content"]["parts"][0]["text"]
-                
-                # Add assistant response to chat history
-                st.session_state.messages.append({"role": "assistant", "content": response_text})
-                with st.chat_message("assistant"):
-                    st.markdown(response_text)
-            except (KeyError, IndexError) as e:
-                 st.error(f"Error parsing response: {result}")
-        else:
-            st.error(f"API Error: {response.status_code} - {response.text}")
+
+    with st.spinner("답변을 생성하는 중..."):
+        try:
+            response = requests.post(API_URL, headers={"Content-Type": "application/json"}, data=json.dumps(payload))
             
-    except Exception as e:
-        st.error(f"Error generating response: {e}")
+            if response.status_code == 200:
+                result = response.json()
+                # Extract text from response
+                try:
+                    response_text = result["candidates"][0]["content"]["parts"][0]["text"]
+                    
+                    # Add assistant response to chat history
+                    st.session_state.messages.append({"role": "assistant", "content": response_text})
+                    with st.chat_message("assistant"):
+                        st.markdown(response_text)
+                except (KeyError, IndexError) as e:
+                     st.error(f"Error parsing response: {result}")
+            else:
+                st.error(f"API Error: {response.status_code} - {response.text}")
+                
+        except Exception as e:
+            st.error(f"Error generating response: {e}")
+
